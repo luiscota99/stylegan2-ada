@@ -1011,6 +1011,13 @@ def execute_cmdline(argv):
     p.add_argument(     '--output_dir',     help='Output directory for image crops.  Will contain .png files', required=True)
     p.add_argument(     '--cropsize',       help='Crop size (resolution,resolution)', type=int, default=256)
 
+    p = add_command(
+        "create_from_images_raw",
+        "Create dataset from a directory full of images. Please be careful"
+        "since the tool recursively searches inside every sub-directory for image files",
+        "create_from_images_raw datasets/mydataset myimagedir",
+    )
+
     args = parser.parse_args(argv[1:] if len(argv) > 1 else ['-h'])
     func = globals()[args.command]
     del args.command
