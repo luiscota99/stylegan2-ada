@@ -649,6 +649,15 @@ def create_celeba(tfrecord_dir, celeba_dir, cx=89, cy=121):
             tfr.add_image(img)
 
 #----------------------------------------------------------------------------
+def _get_all_files(path):
+    if os.path.isfile(path):
+        return [path]
+
+    possible_files = sorted(glob.glob(os.path.join(path, "*")))
+    return_list = []
+    for possible_file in possible_files:
+        return_list.extend(_get_all_files(possible_file))
+    return return_list
 
 def create_from_images(tfrecord_dir, image_dir, shuffle):
     print('Loading images from "%s"' % image_dir)
