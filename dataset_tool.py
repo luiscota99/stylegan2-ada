@@ -96,13 +96,13 @@ class TFRecordExporter:
     def create_tfr_writer(self, shape):
         self.shape = [shape[2], shape[0], shape[1]]
         assert self.shape[0] in [1, 3]
-        assert self.shape[1] % (2 ** self.res_log2) == 0
-        assert self.shape[2] % (2 ** self.res_log2) == 0
+        assert self.shape[1] % (2 ** 7) == 0
+        assert self.shape[2] % (2 ** 7) == 0
         tfr_opt = tf.python_io.TFRecordOptions(
             tf.python_io.TFRecordCompressionType.NONE
         )
         tfr_file = self.tfr_prefix + "-r%02d.tfrecords" % (
-                    self.res_log2
+                    7
         )
         self.tfr_writers.append(tf.python_io.TFRecordWriter(tfr_file, tfr_opt))
 
