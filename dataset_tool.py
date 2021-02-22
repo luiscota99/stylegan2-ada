@@ -72,6 +72,40 @@ class TFRecordExporter:
         np.random.RandomState(123).shuffle(order)
         return order
 
+    def add_image_raw(self, encoded_jpg):
+        if self.print_progress and self.cur_images % self.progress_interval == 0:
+            print(
+                "%d / %d\r" % (self.cur_images, self.expected_images),
+                end="",
+                flush=True,
+            )
+        for lod, tfr_writer in enumerate(self.tfr_writers):
+            ex = tf.train.Example(
+                features=tf.train.Features(
+                    feature={
+                        "shape": tf.train.Feature(
+                            int64_list=tf.train.Int64List(value=self.shape)
+                        ),
+                        "img":tf.train.Feature(bytes_list=tf.train.BytesList(value=[encoded_jpg]))
+                    }
+                )
+            )
+            tfr_writer.write(ex.SerializeToString())
+        self.cur_images += 1
+
+    def create_tfr_writer(self, shape):
+        self.shape = [shape[2], shape[0], shape[1]]
+        assert self.shape[0] in [1, 3]
+        assert self.shape[1] % (2 ** self.res_log2) == 0
+        assert self.shape[2] % (2 ** self.res_log2) == 0
+        tfr_opt = tf.python_io.TFRecordOptions(
+            tf.python_io.TFRecordCompressionType.NONE
+        )
+        tfr_file = self.tfr_prefix + "-r%02d.tfrecords" % (
+                    self.res_log2
+        )
+        self.tfr_writers.append(tf.python_io.TFRecordWriter(tfr_file, tfr_opt))
+
     def add_image(self, img):
         if self.print_progress and self.cur_images % self.progress_interval == 0:
             print('%d / %d\r' % (self.cur_images, self.expected_images), end='', flush=True)
