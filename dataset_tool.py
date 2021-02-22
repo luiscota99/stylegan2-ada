@@ -676,6 +676,35 @@ def create_from_images(tfrecord_dir, image_dir, shuffle):
                 img = img.transpose([2, 0, 1]) # HWC => CHW
             tfr.add_image(img)
 
+def create_from_images_raw(tfrecord_dir, image_dir, shuffle, res_log2=7, resize=None):
+    print('Loading images from "%s"' % image_dir)
+    image_filenames = _get_all_files(image_dir)
+    print(f"detected {len(image_filenames)} images ...")
+    if len(image_filenames) == 0:
+        error("No input images found")
+    img = np.asarray(PIL.Image.open(image_filenames[0]))
+    #resolution = img.shape[0]
+    channels = img.shape[2] if img.ndim == 3 else 1
+    
+    if channels not in [1, 3]:
+        error("Input images must be stored as RGB or grayscale")
+    if shuffle:
+        print("Shuffle the images...")
+    with TFRecordExporter(tfrecord_dir, len(image_filenames)) as tfr:
+        order = (
+            tfr.choose_shuffled_order() if shuffle else np.arange(len(image_filenames))
+        )
+        tfr.create_tfr_writer(img.shape)
+        print("Adding the images to tfrecords ...")
+        for idx in range(order.size):
+            if idx % 1000 == 0:
+                print ("added images", idx)
+            with tf.gfile.FastGFile(image_filenames[order[idx]], 'rb') as fid:
+                try:
+                    tfr.add_image_raw(fid.read())
+                except:
+                    print ('error when adding', image_filenames[order[idx]])
+
 #----------------------------------------------------------------------------
 
 def create_from_hdf5(tfrecord_dir, hdf5_filename, shuffle):
